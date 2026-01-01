@@ -19,15 +19,15 @@ services:
       - ./wp:/var/www/html
     env_file:
       - ./.env
-    command: >
-      /bin/sh -c 
-      "envsubst '
-      $$WP_FQDN
-      $$GATS_FQDN
-      $$WP_HOST_PORT
-      $$HOST_IP
-      ' < /etc/nginx/conf.d/dev.conf.template > /etc/nginx/conf.d/dev.conf
-      && nginx -g 'daemon off;'"
+    # command: >
+    #   /bin/sh -c 
+    #   "envsubst '
+    #   $$WP_FQDN
+    #   $$GATS_FQDN
+    #   $$WP_HOST_PORT
+    #   $$HOST_IP
+    #   ' < /etc/nginx/conf.d/dev.conf.template > /etc/nginx/conf.d/dev.conf
+    #   && nginx -g 'daemon off;'"
     networks:
       - internal
 
