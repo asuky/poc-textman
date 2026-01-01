@@ -1,0 +1,12 @@
+FROM nginx:latest
+ARG UID
+ARG GID
+USER root
+RUN usermod -u $UID -d /var/www/html -s /bin/bash nginx
+RUN groupmod -g $GID nginx
+RUN mkdir -p /etc/nginx/certs
+RUN chown -R $UID:$GID /etc/nginx
+RUN chown -R $UID:$GID /var/cache/nginx
+RUN chmod a+w /var/run
+RUN chown -R $UID:$GID /var/log/nginx
+USER nginx

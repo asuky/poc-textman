@@ -1,0 +1,3 @@
+certs/*
+conf.d/*.conf
+nginx.conf

@@ -1,0 +1,239 @@
+# WordPress用のHTTPSサーバーブロック
+server {
+    # サーバー名（環境変数から取得）
+    server_name ${WP_FQDN};
+    
+    # 文字エンコーディング
+    charset UTF-8;
+    
+    # HTTPS（ポート443）でリッスン
+    listen 443 ssl;
+    
+    # SSL証明書のパス
+    ssl_certificate /etc/nginx/certs/${WP_FQDN}.pem;
+    ssl_certificate_key /etc/nginx/certs/${WP_FQDN}-key.pem;
+
+    # Docker内部DNSリゾルバ（コンテナ名解決用）
+    resolver 127.0.0.11;
+    
+    # レスポンスボディを格納する変数を初期化
+    set $resp_body "";
+
+    # セキュリティヘッダー（クリックジャッキング対策）
+    add_header X-Frame-Options "SAMEORIGIN";
+    
+    # XSS攻撃対策ヘッダー
+    add_header X-XSS-Protection "1; mode=block";
+    
+    # MIMEタイプスニッフィング対策
+    add_header X-Content-Type-Options "nosniff";
+    
+    # ルートロケーション
+    location / {
+            # デフォルトのインデックスファイル
+            index index.php index.html;
+            
+            # ファイルが存在しない場合はindex.phpにリライト
+            try_files $uri $uri/ /index.php?$args;
+    }
+
+    # PHPファイルの処理
+    location ~ \.php$ {
+        # プロキシヘッダー設定（クライアントIPの転送）
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        # オリジナルのHostヘッダーを転送
+        proxy_set_header Host $http_host;
+        
+        # CSRFトークンの転送
+        proxy_set_header X-CSRF-Token $http_x_csrf_token;
+        
+        # クライアントの実IPアドレスを転送
+        proxy_set_header X-Real-IP $remote_addr;
+        
+        # プロトコル（http/https）を転送
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # リダイレクトを無効化
+        proxy_redirect off;
+        
+        #fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        
+        # FastCGI（PHP-FPM）へのプロキシ
+        fastcgi_pass ${WP_HOST_PORT};
+        
+        # FastCGIの基本パラメータを読み込み
+        include fastcgi_params;
+        
+        # デフォルトのインデックスファイル
+        fastcgi_index index.php;
+        
+        #fastcgi_param SCRIPT_NAME index.php;
+        
+        # 実行するPHPスクリプトのパスを設定
+        fastcgi_param SCRIPT_FILENAME $document_root/$fastcgi_script_name;
+        
+        #fastcgi_param REQUEST_URI $1;
+        #fastcgi_param PATH_INFO $fastcgi_path_info;
+        
+        # FastCGIのバッファリングを無効化（リアルタイム出力用）
+        fastcgi_buffering off;
+        
+        # CORS設定（クロスオリジンリクエストを許可）
+        add_header Access-Control-Allow-Origin "${GATS_FQDN}";
+        add_header Access-Control-Allow-Headers "Origin, Authorization, Accept, Content-Type";
+        add_header Access-Control-Allow-Methods "POST, GET, OPTIONS";
+        
+        # 認証情報を含むCORSリクエストを許可
+        add_header Access-Control-Allow-Credentials true;
+    }
+}
+
+# Gatsby用のHTTPSサーバーブロック
+server {
+    # サーバー名（環境変数から取得）
+    server_name ${GATS_FQDN};
+    
+    # 文字エンコーディング
+    charset UTF-8;
+    
+    # HTTPS（ポート443）でリッスン
+    listen 443 ssl;
+    
+    # SSL証明書のパス
+    ssl_certificate /etc/nginx/certs/${GATS_FQDN}.pem;
+    ssl_certificate_key /etc/nginx/certs/${GATS_FQDN}-key.pem;
+
+    # Docker内部DNSリゾルバ
+    resolver 127.0.0.11;
+    
+    # レスポンスボディを格納する変数を初期化
+    set $resp_body "";
+
+    # セキュリティヘッダー
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+    
+    # Socket.io用のWebSocketプロキシ設定
+    location ~* "^/socket.io/(.*)" {
+        # リダイレクトを無効化
+        proxy_redirect off;
+        
+        # HTTP/1.1を使用（WebSocketに必要）
+        proxy_http_version 1.1;
+        
+        # WebSocket接続のためのアップグレードヘッダー
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # バックエンドへプロキシ
+        proxy_pass http://${HOST_IP}:8000/socket.io/$1$is_args$args;
+    }
+
+    # Webpack Hot Module Replacement用のWebSocketプロキシ
+    location ~* "^/__webpack_hmr" {
+        # リダイレクトを無効化
+        proxy_redirect off;
+        
+        # HTTP/1.1を使用
+        proxy_http_version 1.1;
+        
+        # WebSocket接続のためのアップグレードヘッダー
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # バックエンドへプロキシ
+        proxy_pass http://${HOST_IP}:8000/__webpack_hmr$is_args$args;
+    }
+
+    # GraphQLエンドポイント用のプロキシ
+    location ~* "^/__graphql" {
+        # リダイレクトを無効化
+        proxy_redirect off;
+        
+        # バックエンドへプロキシ
+        proxy_pass http://${HOST_IP}:8000/__graphql$is_args$args;
+    }
+
+    # その他すべてのリクエスト用のプロキシ
+    location ~/ {
+        # リダイレクトを無効化
+        proxy_redirect off;
+        
+        # バックエンドへプロキシ
+        proxy_pass http://${HOST_IP}:8000${request_uri}$is_args$args;
+    }
+
+    # デバッグ用変数を初期化
+    set $debug_var '';
+    
+    # プロキシの読み取りタイムアウト（秒）
+    proxy_read_timeout 600;
+
+    # キャッシュを無効化（開発環境用）
+    add_header Cache-Control no-cache;
+    
+    # sendfileを無効化（開発環境でファイル更新を即座に反映）
+    sendfile off;
+    
+    # ETagを無効化
+    etag off;
+    
+    # If-Modified-Since処理を無効化
+    if_modified_since off;
+}
+
+# WordPress用のHTTPサーバーブロック（HTTPSへのリダイレクト用）
+server {
+    # サーバー名
+    server_name ${WP_FQDN};
+    
+    # 文字エンコーディング
+    charset UTF-8;
+    
+    # HTTP（ポート80）でリッスン
+    listen 80;
+
+    # Let's Encrypt証明書検証用のパス
+    location ^~ /.well-known/acme-challenge/ {
+      # プレーンテキストとして返す
+      default_type "text/plain";
+      
+      # 検証ファイルの配置場所
+      root /var/www/html/;
+    }
+
+    # その他すべてのリクエスト
+    location / {
+      # HTTPSへ恒久的にリダイレクト（301）
+      return 301 https://${WP_FQDN};
+    }
+}
+
+# Gatsby用のHTTPサーバーブロック（HTTPSへのリダイレクト用）
+server {
+    # サーバー名
+    server_name ${GATS_FQDN};
+    
+    # 文字エンコーディング
+    charset UTF-8;
+    
+    # HTTP（ポート80）でリッスン
+    listen 80;
+
+    # Let's Encrypt証明書検証用のパス
+    location ^~ /.well-known/acme-challenge/ {
+      # プレーンテキストとして返す
+      default_type "text/plain";
+      
+      # 検証ファイルの配置場所
+      root /var/www/html/;
+    }
+
+    # その他すべてのリクエスト
+    location / {
+      # HTTPSへ恒久的にリダイレクト（301）
+      return 301 https://${GATS_FQDN};
+    }
+}

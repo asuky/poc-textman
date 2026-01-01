@@ -1,0 +1,117 @@
+# Nginxを実行するユーザー（コメントアウト時はコンパイル時のデフォルトユーザーを使用）
+#user  nginx;
+
+# プロセスIDファイルの保存場所
+pid        /var/run/nginx.pid;
+
+# ワーカープロセス数（auto: CPUコア数に自動設定）
+worker_processes  auto;
+
+# イベント処理の設定
+events {
+    # 1つのワーカープロセスが同時に処理できる接続数
+    worker_connections 2048;
+    
+    # 複数の新規接続を一度に受け入れる
+    multi_accept on;
+    
+    # Linux用の効率的なイベント駆動型I/Oメソッドを使用
+    use epoll;
+}
+
+# HTTP設定
+http {
+    # Nginxのバージョン情報を隠す（セキュリティ対策）
+    server_tokens off;
+    
+    # 効率的なファイル転送を有効化
+    sendfile on;
+    
+    # sendfile使用時にパケットを最適化（レスポンスヘッダとファイルを一緒に送信）
+    tcp_nopush on;
+    
+    # 小さなパケットを即座に送信（遅延を削減）
+    tcp_nodelay on;
+    
+    # デフォルトのドキュメントルート
+    root /var/www/html;
+
+    # クライアントからのヘッダー受信タイムアウト（秒）
+    client_header_timeout 1000;
+    
+    # クライアントからのボディ受信タイムアウト（秒）
+    client_body_timeout 1000;
+    
+    # タイムアウトした接続をリセット
+    reset_timedout_connection on;
+    
+    # クライアントへの送信タイムアウト（秒）
+    send_timeout 1000;
+    
+    # 接続数制限用の共有メモリゾーン（IPアドレスベースで5MB）
+    limit_conn_zone $binary_remote_addr zone=addr:5m;
+    
+    # 1つのIPアドレスからの同時接続数を100に制限
+    limit_conn addr 100;
+
+    # MIMEタイプ定義ファイルを読み込み
+    include       /etc/nginx/mime.types;
+    
+    # デフォルトのMIMEタイプ
+    default_type text/html;
+    
+    # デフォルトの文字エンコーディング
+    charset UTF-8;
+
+    # アクセスログのフォーマット定義（標準形式）
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for" ';
+
+    # テスト用のカスタムログフォーマット
+    log_format test "($status)[${request_uri}${is_args}${args}] $resp_body";
+
+    #log_format test2 "$document_root - $fastcgi_script_name - $filename";
+
+    # アクセスログの出力先（標準出力に test フォーマットで出力）
+    access_log /dev/stdout test;
+    
+    # エラーログの出力先（標準出力にデバッグレベルで出力）
+    error_log /dev/stdout debug;
+
+    # Gzip圧縮を有効化
+    gzip  on;
+    
+    # HTTP/1.0でも圧縮を有効化
+    gzip_http_version 1.0;
+    
+    # IE6では圧縮を無効化（互換性問題回避）
+    gzip_disable "msie6";
+    
+    # プロキシ経由のリクエストでも圧縮
+    gzip_proxied any;
+    
+    # 圧縮する最小ファイルサイズ（バイト）
+    gzip_min_length 1024;
+    
+    # 圧縮レベル（1-9、6は標準的なバランス）
+    gzip_comp_level 6;
+    
+    # 圧縮対象のMIMEタイプ
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+
+    # ファイルディスクリプタのキャッシュ（最大10万ファイル、20秒間非アクセスで削除）
+    open_file_cache max=100000 inactive=20s;
+    
+    # キャッシュ情報の有効期限（30秒）
+    open_file_cache_valid 30s;
+    
+    # キャッシュに保持するための最小アクセス回数
+    open_file_cache_min_uses 2;
+    
+    # ファイルエラー情報もキャッシュ
+    open_file_cache_errors on;
+
+    # 追加の設定ファイルを読み込み
+    include /etc/nginx/conf.d/*.conf;
+}

@@ -1,30 +1,36 @@
 services:
-  traefik:
-    image: traefik:v3.6.5
-    container_name: traefik
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
+  rp:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile_rp
+      args:
+        UID: ${UID}
+        GID: ${GID}
+    tty: true
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-
-      - "--api.insecure=true"
-      - "--api.dashboard=true"
-      
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/certs:ro
-
+      - type: bind
+        source: ./rp/nginx.conf.dev
+        target: /etc/nginx/nginx.conf
+      - ./rp/conf.d/:/etc/nginx/conf.d/
+      - ./rp/certs/:/etc/nginx/certs/
+      - ./wp:/var/www/html
+    env_file:
+      - ./.env
+    command: >
+      /bin/sh -c 
+      "envsubst '
+      $$WP_FQDN
+      $$GATS_FQDN
+      $$WP_HOST_PORT
+      $$HOST_IP
+      ' < /etc/nginx/conf.d/dev.conf.template > /etc/nginx/conf.d/dev.conf
+      && nginx -g 'daemon off;'"
     networks:
-      - traefik-network
+      - internal
 
 networks:
-  traefik-network:
+  internal:
     driver: bridge
