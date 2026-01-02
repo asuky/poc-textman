@@ -1,0 +1,119 @@
+# Django + Static Files用のHTTPSサーバーブロック
+server {
+    # サーバー名（環境変数から取得）
+    server_name ${DJANGO_FQDN};
+    
+    # 文字エンコーディング
+    charset UTF-8;
+    
+    # HTTPS（ポート443）でリッスン
+    listen 443 ssl;
+    
+    # SSL証明書のパス
+    ssl_certificate /etc/nginx/certs/${DJANGO_FQDN}.pem;
+    ssl_certificate_key /etc/nginx/certs/${DJANGO_FQDN}-key.pem;
+
+    # Docker内部DNSリゾルバ（コンテナ名解決用）
+    resolver 127.0.0.11;
+    
+    # レスポンスボディを格納する変数を初期化
+    set $resp_body "";
+
+    # セキュリティヘッダー（クリックジャッキング対策）
+    add_header X-Frame-Options "SAMEORIGIN";
+    
+    # XSS攻撃対策ヘッダー
+    add_header X-XSS-Protection "1; mode=block";
+    
+    # MIMEタイプスニッフィング対策
+    add_header X-Content-Type-Options "nosniff";
+    
+    # 静的ファイルの配信（Django collectstaticで収集したファイル）
+    location /static/ {
+        # 静的ファイルのルートディレクトリ
+        alias /var/www/static/;
+        
+        # ファイルが存在しない場合は404を返す
+        try_files $uri =404;
+        
+        # 静的ファイルのキャッシュ設定（1年間）
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        
+        # Gzip圧縮を有効化
+        gzip on;
+        gzip_types text/css application/javascript application/json image/svg+xml;
+    }
+    
+    # メディアファイルの配信（ユーザーアップロードファイル）
+    location /media/ {
+        # メディアファイルのルートディレクトリ
+        alias /var/www/media/;
+        
+        # ファイルが存在しない場合は404を返す
+        try_files $uri =404;
+        
+        # メディアファイルのキャッシュ設定（30日間）
+        expires 30d;
+        add_header Cache-Control "public";
+    }
+
+    # Djangoアプリケーションへのプロキシ
+    location / {
+        # Djangoバックエンドへのプロキシパス（環境変数から取得）
+        proxy_pass http://${DJANGO_HOST_PORT};
+        
+        # プロキシヘッダー設定（クライアントIPの転送）
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        # オリジナルのHostヘッダーを転送
+        proxy_set_header Host $http_host;
+        
+        # CSRFトークンの転送
+        proxy_set_header X-CSRF-Token $http_x_csrf_token;
+        
+        # クライアントの実IPアドレスを転送
+        proxy_set_header X-Real-IP $remote_addr;
+        
+        # プロトコル（http/https）を転送
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # リダイレクトを無効化
+        proxy_redirect off;
+        
+        # タイムアウト設定
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # バッファリング設定
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+        proxy_busy_buffers_size 8k;
+    }
+    
+    # Django Admin用の静的ファイル（オプション）
+    location /static/admin/ {
+        alias /var/www/static/admin/;
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # ヘルスチェックエンドポイント（オプション）
+    location /health/ {
+        proxy_pass http://${DJANGO_HOST_PORT}/health/;
+        proxy_set_header Host $http_host;
+        access_log off;
+    }
+}
+
+# HTTP to HTTPS リダイレクト（オプション）
+server {
+    listen 80;
+    server_name ${DJANGO_FQDN};
+    
+    # すべてのHTTPリクエストをHTTPSにリダイレクト
+    return 301 https://$server_name$request_uri;
+}

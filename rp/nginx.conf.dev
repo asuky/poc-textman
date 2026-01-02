@@ -69,7 +69,7 @@ http {
                       '"$http_user_agent" "$http_x_forwarded_for" ';
 
     # テスト用のカスタムログフォーマット
-    log_format test "($status)[${request_uri}${is_args}${args}] $resp_body";
+    log_format test "($status)[${request_uri}${is_args}${args}]";
 
     #log_format test2 "$document_root - $fastcgi_script_name - $filename";
 
@@ -111,6 +111,16 @@ http {
     
     # ファイルエラー情報もキャッシュ
     open_file_cache_errors on;
+
+    # デフォルトサーバー（IPアドレス直打ちアクセスを拒否）
+    # HTTP（ポート80）
+    server {
+        listen 80 default_server;
+        server_name _;
+        
+        # 接続を即座に閉じる（444はnginx独自のステータスコード）
+        return 444;
+    }
 
     # 追加の設定ファイルを読み込み
     include /etc/nginx/conf.d/*.conf;

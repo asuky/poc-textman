@@ -16,7 +16,6 @@ services:
         target: /etc/nginx/nginx.conf
       - ./rp/conf.d/:/etc/nginx/conf.d/
       - ./rp/certs/:/etc/nginx/certs/
-      - ./wp:/var/www/html
     env_file:
       - ./.env
     # command: >
