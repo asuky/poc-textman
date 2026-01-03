@@ -1,7 +1,7 @@
 # WordPress用のHTTPSサーバーブロック
 server {
-    # サーバー名（環境変数から取得）
-    server_name ${WP_FQDN};
+    # サーバー名（プレースホルダー）
+    server_name {{WP_FQDN}};
     
     # 文字エンコーディング
     charset UTF-8;
@@ -10,8 +10,8 @@ server {
     listen 443 ssl;
     
     # SSL証明書のパス
-    ssl_certificate /etc/nginx/certs/${WP_FQDN}.pem;
-    ssl_certificate_key /etc/nginx/certs/${WP_FQDN}-key.pem;
+    ssl_certificate /etc/nginx/certs/{{WP_FQDN}}.pem;
+    ssl_certificate_key /etc/nginx/certs/{{WP_FQDN}}-key.pem;
 
     # Docker内部DNSリゾルバ（コンテナ名解決用）
     resolver 127.0.0.11;
@@ -60,7 +60,7 @@ server {
         #fastcgi_split_path_info ^(.+\.php)(/.+)$;
         
         # FastCGI（PHP-FPM）へのプロキシ
-        fastcgi_pass ${WP_HOST_PORT};
+        fastcgi_pass {{WP_HOST_PORT}};
         
         # FastCGIの基本パラメータを読み込み
         include fastcgi_params;
@@ -80,7 +80,7 @@ server {
         fastcgi_buffering off;
         
         # CORS設定（クロスオリジンリクエストを許可）
-        add_header Access-Control-Allow-Origin "${GATS_FQDN}";
+        add_header Access-Control-Allow-Origin "{{GATS_FQDN}}";
         add_header Access-Control-Allow-Headers "Origin, Authorization, Accept, Content-Type";
         add_header Access-Control-Allow-Methods "POST, GET, OPTIONS";
         
@@ -91,8 +91,8 @@ server {
 
 # Gatsby用のHTTPSサーバーブロック
 server {
-    # サーバー名（環境変数から取得）
-    server_name ${GATS_FQDN};
+    # サーバー名（プレースホルダー）
+    server_name {{GATS_FQDN}};
     
     # 文字エンコーディング
     charset UTF-8;
@@ -101,8 +101,8 @@ server {
     listen 443 ssl;
     
     # SSL証明書のパス
-    ssl_certificate /etc/nginx/certs/${GATS_FQDN}.pem;
-    ssl_certificate_key /etc/nginx/certs/${GATS_FQDN}-key.pem;
+    ssl_certificate /etc/nginx/certs/{{GATS_FQDN}}.pem;
+    ssl_certificate_key /etc/nginx/certs/{{GATS_FQDN}}-key.pem;
 
     # Docker内部DNSリゾルバ
     resolver 127.0.0.11;
@@ -128,7 +128,7 @@ server {
         proxy_set_header Connection "upgrade";
         
         # バックエンドへプロキシ
-        proxy_pass http://${HOST_IP}:8000/socket.io/$1$is_args$args;
+        proxy_pass http://{{HOST_IP}}:8000/socket.io/$1$is_args$args;
     }
 
     # Webpack Hot Module Replacement用のWebSocketプロキシ
@@ -144,7 +144,7 @@ server {
         proxy_set_header Connection "upgrade";
         
         # バックエンドへプロキシ
-        proxy_pass http://${HOST_IP}:8000/__webpack_hmr$is_args$args;
+        proxy_pass http://{{HOST_IP}}:8000/__webpack_hmr$is_args$args;
     }
 
     # GraphQLエンドポイント用のプロキシ
@@ -153,7 +153,7 @@ server {
         proxy_redirect off;
         
         # バックエンドへプロキシ
-        proxy_pass http://${HOST_IP}:8000/__graphql$is_args$args;
+        proxy_pass http://{{HOST_IP}}:8000/__graphql$is_args$args;
     }
 
     # その他すべてのリクエスト用のプロキシ
@@ -162,7 +162,7 @@ server {
         proxy_redirect off;
         
         # バックエンドへプロキシ
-        proxy_pass http://${HOST_IP}:8000${request_uri}$is_args$args;
+        proxy_pass http://{{HOST_IP}}:8000${request_uri}$is_args$args;
     }
 
     # デバッグ用変数を初期化
@@ -187,7 +187,7 @@ server {
 # WordPress用のHTTPサーバーブロック（HTTPSへのリダイレクト用）
 server {
     # サーバー名
-    server_name ${WP_FQDN};
+    server_name {{WP_FQDN}};
     
     # 文字エンコーディング
     charset UTF-8;
@@ -207,14 +207,14 @@ server {
     # その他すべてのリクエスト
     location / {
       # HTTPSへ恒久的にリダイレクト（301）
-      return 301 https://${WP_FQDN};
+      return 301 https://{{WP_FQDN}};
     }
 }
 
 # Gatsby用のHTTPサーバーブロック（HTTPSへのリダイレクト用）
 server {
     # サーバー名
-    server_name ${GATS_FQDN};
+    server_name {{GATS_FQDN}};
     
     # 文字エンコーディング
     charset UTF-8;
@@ -234,6 +234,6 @@ server {
     # その他すべてのリクエスト
     location / {
       # HTTPSへ恒久的にリダイレクト（301）
-      return 301 https://${GATS_FQDN};
+      return 301 https://{{GATS_FQDN}};
     }
 }
