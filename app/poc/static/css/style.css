@@ -1,0 +1,191 @@
+/* ============================================================
+   style.css - メインスタイルシート
+   ============================================================
+   このファイルは Django の静的ファイルとして提供されます。
+   
+   【配置場所】
+   プロジェクトルート/static/css/style.css
+   
+   【アクセス方法】
+   - テンプレート内: {% static 'css/style.css' %}
+   - ブラウザ直接: http://localhost:8000/static/css/style.css
+   
+   【settings.py の設定】
+   STATIC_URL = 'static/'
+   STATICFILES_DIRS = [BASE_DIR / 'static']
+   ============================================================ */
+
+/* 全体のリセット */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* ヘッダー */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 30px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.welcome-message {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* メインコンテンツ */
+main {
+    padding: 30px;
+}
+
+section {
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 8px;
+}
+
+/* エンドポイントリスト */
+.endpoint-list {
+    list-style: none;
+}
+
+.endpoint-list li {
+    background: #f7f7f7;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.endpoint-list code {
+    background: #667eea;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+/* ボタン */
+button {
+    background: #764ba2;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #5a3780;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* 結果表示エリア */
+#result {
+    background: #2d3748;
+    color: #68d391;
+    padding: 20px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    overflow-x: auto;
+    min-height: 80px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* 静的ファイル説明セクション */
+.example-box {
+    background: #f0f4f8;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #667eea;
+}
+
+.example-box h3 {
+    color: #2d3748;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.example-box pre {
+    background: #2d3748;
+    color: #68d391;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    margin: 10px 0;
+}
+
+.note {
+    color: #718096;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 8px;
+}
+
+/* フッター */
+footer {
+    background: #2d3748;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9rem;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .endpoint-list li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .endpoint-list button {
+        margin-top: 10px;
+    }
+}

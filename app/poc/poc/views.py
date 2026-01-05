@@ -6,8 +6,42 @@
 # ============================================================
 
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+
+
+def index(request):
+    """
+    ルート (/) にアクセスしたときのビュー関数
+    
+    【処理の流れ】
+    1. クライアントが GET / にアクセス
+    2. DjangoのURLルーターがこの関数を呼び出す
+    3. テンプレート（index.html）をレンダリング
+    4. HTMLレスポンスをクライアントに返す
+    
+    【静的ファイルの利用】
+    テンプレート内で {% load static %} を使うことで、
+    静的ファイル（CSS, JS, 画像など）を読み込めます。
+    
+    例:
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <script src="{% static 'js/script.js' %}"></script>
+        <img src="{% static 'images/logo.png' %}">
+    
+    Returns:
+        HttpResponse: レンダリングされたHTMLページ
+    """
+    # render()関数:
+    #   第1引数: request オブジェクト
+    #   第2引数: テンプレートファイル名（templates/ からの相対パス）
+    #   第3引数: テンプレートに渡すコンテキスト（変数）
+    context = {
+        'title': 'Django POC プロジェクト',
+        'message': 'Django プロジェクトへようこそ！',
+    }
+    return render(request, 'index.html', context)
 
 
 def poc_status(request):

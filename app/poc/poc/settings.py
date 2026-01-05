@@ -79,7 +79,8 @@ ROOT_URLCONF = 'poc.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # テンプレートファイル（HTML）を配置するディレクトリ
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -139,4 +140,25 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+# ============================================================
+# 静的ファイル設定
+# ============================================================
+# STATIC_URL: ブラウザからアクセスするときのURLパス
+# 例: http://localhost:8000/static/css/style.css
 STATIC_URL = 'static/'
+
+# STATICFILES_DIRS: 開発環境で静的ファイルを配置するディレクトリ
+# プロジェクト全体で共有する静的ファイル（CSS, JS, 画像など）を配置
+import os
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # プロジェクトルート/static/
+]
+
+# STATIC_ROOT: 本番環境で collectstatic コマンドが静的ファイルを集める場所
+# 開発環境では通常使用しません
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# ============================================================
+# テンプレート設定（既存の設定を確認）
+# ============================================================
+# TEMPLATES の DIRS に、カスタムテンプレートディレクトリを追加します

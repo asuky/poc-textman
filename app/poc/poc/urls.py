@@ -29,6 +29,7 @@ from django.urls import path
 # views.pyで定義したビュー関数をインポートします。
 # 「.views」の「.」は「同じディレクトリ内の」という意味です。
 from .views import (
+    index,                   # ルート (/) 用のビュー
     poc_status,
     poc_method_example,      # HTTPメソッド別処理の例
     poc_restricted_methods,  # 特定メソッドのみ許可
@@ -47,7 +48,26 @@ from .views import (
 # 【重要】path() 自体はHTTPメソッドを区別しません！
 # 同じURLパスで GET/POST/PUT/DELETE などを区別するには、
 # ビュー関数内で request.method をチェックして分岐させます。
+#
+# 【path()の引数】
+# path(route, view, name=None)
+#   第1引数 route: URLパス（文字列） 例: 'poc/', 'articles/<int:id>/'
+#   第2引数 view:  呼び出すビュー関数（関数オブジェクト）
+#   第3引数 name:  このURLパターンの識別名（逆引き用）
+#
+# 【nameの使い道】
+# - テンプレート: {% url 'poc_status' %} → /poc/ に変換
+# - ビュー: redirect('poc_status') → /poc/ にリダイレクト
+# - reverse('poc_status') → '/poc/' を取得
+# ============================================================
 urlpatterns = [
+    # ============================================================
+    # ルート (/) - トップページ
+    # ============================================================
+    # ルートにアクセスしたときに、index.html を表示します
+    # 静的ファイル（CSS, JavaScript, 画像）も読み込めます
+    path('', index, name='index'),
+    
     # 管理画面へのURL（Django標準機能）
     path('admin/', admin.site.urls),
     

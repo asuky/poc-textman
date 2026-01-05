@@ -78,6 +78,10 @@ $ docker login
 ```
 
 # Django メモ
+ある程度のステップで copilot に下記依頼すること。
+```
+ここまででまだまとめられてない会話の内容を prompts/YYYYMMDD.md にまとめてください
+```
 ## Django 開始手順
 app ディレクトリ内前提
 project が全体、app が機能単位、project 内の app は project の設定を共有する。
@@ -226,3 +230,6 @@ ASGI は可能性
 WSGI は安定
 ```
 
+## 書き方
+- urls.py に path を追加する
+- HTTP 

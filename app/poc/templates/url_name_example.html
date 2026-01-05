@@ -1,0 +1,70 @@
+<!-- name パラメータの使用例デモ -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>URL name の使い方デモ</title>
+</head>
+<body>
+    <h1>Django URL name の使い方</h1>
+    
+    <!-- ============================================================
+         【悪い例】URLをハードコード
+         ============================================================
+         問題点: urls.py でパスを変更したら、全てのテンプレートも修正が必要
+         ============================================================ -->
+    <h2>❌ 悪い例（ハードコード）</h2>
+    <a href="/poc/">POCページ</a>
+    <a href="/">トップページ</a>
+    
+    <!-- ============================================================
+         【良い例】name を使ってURLを生成
+         ============================================================
+         メリット: urls.py でパスを変更しても、テンプレートの修正不要
+         ============================================================ -->
+    <h2>✅ 良い例（name使用）</h2>
+    {% load static %}
+    
+    <!-- シンプルなURL -->
+    <a href="{% url 'index' %}">トップページ</a>
+    <a href="{% url 'poc_status' %}">POCページ</a>
+    <a href="{% url 'poc_slow' %}">処理時間テスト</a>
+    
+    <!-- パラメータ付きURLの例（記事詳細など） -->
+    <!-- 
+    urls.py に以下があると仮定:
+    path('articles/<int:id>/', article_detail, name='article_detail')
+    -->
+    <!-- <a href="{% url 'article_detail' id=123 %}">記事123</a> -->
+    <!-- 上記は /articles/123/ に変換される -->
+    
+    <!-- パラメータを変数で渡す例 -->
+    <!-- 
+    {% for article in articles %}
+        <a href="{% url 'article_detail' id=article.id %}">{{ article.title }}</a>
+    {% endfor %}
+    -->
+    
+    <!-- ============================================================
+         フォームのaction属性でも使用可能
+         ============================================================ -->
+    <h2>フォームでの使用例</h2>
+    <form method="post" action="{% url 'poc_post_only' %}">
+        {% csrf_token %}
+        <input type="text" name="data">
+        <button type="submit">送信</button>
+    </form>
+    
+    <!-- ============================================================
+         JavaScript内でURLを使う場合
+         ============================================================ -->
+    <script>
+        // テンプレートタグでURLを生成してJSに渡す
+        const apiUrl = "{% url 'poc_status' %}";
+        
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => console.log(data));
+    </script>
+</body>
+</html>
