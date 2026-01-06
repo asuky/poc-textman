@@ -21,7 +21,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include  # include を追加
 
 # ============================================================
 # ビュー関数をインポート
@@ -70,6 +70,14 @@ urlpatterns = [
     
     # 管理画面へのURL（Django標準機能）
     path('admin/', admin.site.urls),
+    
+    # ============================================================
+    # ブログアプリのURL
+    # ============================================================
+    # blogアプリのurls.pyで定義されたURLパターンをすべて /blog/ 配下に配置
+    # 例: blog/urls.py で path('', ...) → /blog/
+    #     blog/urls.py で path('<slug>/', ...) → /blog/<slug>/
+    path('blog/', include('blog.urls')),
     
     # /poc へのアクセスをpoc_status関数に紐付け
     # この1つのpath()で、すべてのHTTPメソッド（GET, POST, PUT等）を受け付けます

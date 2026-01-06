@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}記事を編集{% else %}新規記事作成{% endif %} - POC Blog{% endblock %}
+
+{% block content %}
+<div class="post-form" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="font-size: 28px; margin-bottom: 30px;">
+        {% if form.instance.pk %}
+            記事を編集
+        {% else %}
+            新規記事作成
+        {% endif %}
+    </h2>
+    
+    <form method="post" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        {% csrf_token %}
+        
+        <!-- フォームエラーの表示 -->
+        {% if form.errors %}
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #f5c6cb;">
+                <strong>エラーがあります：</strong>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <!-- フォームフィールド -->
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.title.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                タイトル <span style="color: red;">*</span>
+            </label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                    {{ form.title.errors }}
+                </div>
+            {% endif %}
+            <small style="color: #666; font-size: 14px; display: block; margin-top: 5px;">
+                記事のタイトルを入力してください
+            </small>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.slug.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                スラッグ <span style="color: red;">*</span>
+            </label>
+            {{ form.slug }}
+            {% if form.slug.errors %}
+                <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                    {{ form.slug.errors }}
+                </div>
+            {% endif %}
+            <small style="color: #666; font-size: 14px; display: block; margin-top: 5px;">
+                URL用の識別子（例: my-first-post）。半角英数字とハイフンのみ使用可能
+            </small>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.category.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                カテゴリ
+            </label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                    {{ form.category.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.content.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                本文 <span style="color: red;">*</span>
+            </label>
+            {{ form.content }}
+            {% if form.content.errors %}
+                <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                    {{ form.content.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+            <label for="{{ form.status.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                ステータス
+            </label>
+            {{ form.status }}
+            {% if form.status.errors %}
+                <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                    {{ form.status.errors }}
+                </div>
+            {% endif %}
+            <small style="color: #666; font-size: 14px; display: block; margin-top: 5px;">
+                「公開済み」を選択すると記事が公開されます
+            </small>
+        </div>
+        
+        <!-- ボタン -->
+        <div style="display: flex; gap: 10px; justify-content: flex-start;">
+            <button type="submit" class="btn">
+                {% if form.instance.pk %}更新する{% else %}作成する{% endif %}
+            </button>
+            <a href="{% url 'blog:post_list' %}" class="btn btn-secondary">キャンセル</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* フォームフィールドのスタイル */
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        font-family: inherit;
+    }
+    
+    textarea {
+        min-height: 200px;
+        resize: vertical;
+    }
+    
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: #0066cc;
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+</style>
+{% endblock %}

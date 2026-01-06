@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - POC Blog{% endblock %}
+
+{% block content %}
+<article class="post-detail" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <!-- 記事ヘッダー -->
+    <header style="margin-bottom: 30px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px;">
+        <h1 style="font-size: 32px; margin-bottom: 15px; color: #333;">
+            {{ post.title }}
+        </h1>
+        
+        <div style="display: flex; gap: 20px; color: #666; font-size: 14px; flex-wrap: wrap;">
+            <span>👤 {{ post.author.username }}</span>
+            {% if post.category %}
+                <span>📁 {{ post.category.name }}</span>
+            {% endif %}
+            <span>📅 {{ post.published_at|date:"Y年m月d日 H:i" }}</span>
+            <span>🕒 更新: {{ post.updated_at|date:"Y年m月d日 H:i" }}</span>
+        </div>
+        
+        <!-- タグ -->
+        {% if post.tags.all %}
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                {% for tag in post.tags.all %}
+                    <span style="background: #e9ecef; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+                        #{{ tag.name }}
+                    </span>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- 編集・削除ボタン（自分の記事のみ） -->
+        {% if user == post.author %}
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <a href="{% url 'blog:post_update' post.slug %}" class="btn btn-secondary">編集</a>
+                <a href="{% url 'blog:post_delete' post.slug %}" class="btn btn-danger">削除</a>
+            </div>
+        {% endif %}
+    </header>
+    
+    <!-- 記事本文 -->
+    <div class="post-content" style="line-height: 1.8; color: #333; font-size: 16px; margin-bottom: 40px;">
+        {{ post.content|linebreaks }}
+    </div>
+    
+    <!-- コメントセクション -->
+    <section class="comments" style="border-top: 2px solid #f0f0f0; padding-top: 30px;">
+        <h2 style="font-size: 24px; margin-bottom: 20px;">
+            💬 コメント ({{ post.comments.count }})
+        </h2>
+        
+        {% if post.comments.all %}
+            <div class="comment-list">
+                {% for comment in post.comments.all %}
+                    <div class="comment" style="background: #f8f9fa; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #0066cc;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <strong style="color: #0066cc;">{{ comment.author.username }}</strong>
+                            <span style="color: #666; font-size: 14px;">{{ comment.created_at|date:"Y年m月d日 H:i" }}</span>
+                        </div>
+                        <p style="color: #333; line-height: 1.6;">{{ comment.content|linebreaks }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #666; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                まだコメントがありません。最初のコメントを投稿しましょう！
+            </p>
+        {% endif %}
+        
+        <!-- コメント投稿フォーム（ログインユーザーのみ） -->
+        {% if user.is_authenticated %}
+            <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px;">コメントを投稿</h3>
+                <p style="color: #666; font-size: 14px;">
+                    ※ コメント機能は実装例です。実際に投稿するには追加のビューとフォームが必要です。
+                </p>
+            </div>
+        {% else %}
+            <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+                <p style="color: #666;">コメントを投稿するには <a href="{% url 'admin:login' %}" style="color: #0066cc;">ログイン</a> してください。</p>
+            </div>
+        {% endif %}
+    </section>
+    
+    <!-- ナビゲーション -->
+    <div style="margin-top: 40px; text-align: center;">
+        <a href="{% url 'blog:post_list' %}" class="btn btn-secondary">記事一覧に戻る</a>
+    </div>
+</article>
+{% endblock %}

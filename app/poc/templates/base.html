@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ブログ{% endblock %}</title>
+    
+    <!-- 静的ファイルの読み込み -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- 基本的なスタイル -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav h1 {
+            font-size: 24px;
+            color: #0066cc;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        nav a:hover {
+            background-color: #f0f0f0;
+        }
+        nav a.active {
+            background-color: #0066cc;
+            color: white;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #0066cc;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0052a3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        footer {
+            margin-top: 50px;
+            padding: 20px;
+            text-align: center;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .message {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- ヘッダー・ナビゲーション -->
+    <header>
+        <nav>
+            <h1><a href="{% url 'index' %}" style="color: #0066cc; text-decoration: none;">POC Blog</a></h1>
+            <ul>
+                <li><a href="{% url 'index' %}">ホーム</a></li>
+                <li><a href="{% url 'blog:post_list' %}">記事一覧</a></li>
+                <li><a href="{% url 'blog:category_list' %}">カテゴリ</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'blog:post_create' %}">記事作成</a></li>
+                    <li><a href="{% url 'admin:index' %}">管理画面</a></li>
+                    <li><span>ようこそ、{{ user.username }}さん</span></li>
+                {% else %}
+                    <li><a href="{% url 'admin:login' %}">ログイン</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    
+    <!-- メインコンテンツ -->
+    <main class="container">
+        <!-- メッセージ表示 -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- 各ページのコンテンツ -->
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- フッター -->
+    <footer>
+        <p>&copy; 2026 POC Blog. All rights reserved.</p>
+    </footer>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

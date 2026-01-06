@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}カテゴリ一覧 - POC Blog{% endblock %}
+
+{% block content %}
+<div class="category-list">
+    <h2 style="font-size: 28px; margin-bottom: 30px;">📁 カテゴリ一覧</h2>
+    
+    {% if categories %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            {% for category in categories %}
+                <div class="category-card" style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s;">
+                    <h3 style="font-size: 22px; margin-bottom: 10px; color: #0066cc;">
+                        {{ category.name }}
+                    </h3>
+                    
+                    <p style="color: #666; line-height: 1.6; margin-bottom: 15px; min-height: 48px;">
+                        {% if category.description %}
+                            {{ category.description|truncatewords:20 }}
+                        {% else %}
+                            このカテゴリの説明はまだありません。
+                        {% endif %}
+                    </p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+                        <span style="color: #666; font-size: 14px;">
+                            📄 {{ category.post_count }}件の記事
+                        </span>
+                        <span style="color: #999; font-size: 12px;">
+                            作成: {{ category.created_at|date:"Y/m/d" }}
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="background: white; padding: 40px; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <p style="color: #666; font-size: 18px;">カテゴリがまだありません。</p>
+            {% if user.is_authenticated %}
+                <p style="color: #666; margin-top: 10px;">
+                    管理画面からカテゴリを作成できます。
+                </p>
+                <a href="{% url 'admin:index' %}" class="btn" style="margin-top: 20px;">管理画面へ</a>
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    <!-- 記事一覧に戻る -->
+    <div style="margin-top: 40px; text-align: center;">
+        <a href="{% url 'blog:post_list' %}" class="btn btn-secondary">記事一覧に戻る</a>
+    </div>
+</div>
+
+<style>
+    .category-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}

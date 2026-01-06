@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}記事を削除 - POC Blog{% endblock %}
+
+{% block content %}
+<div class="post-delete" style="max-width: 600px; margin: 0 auto;">
+    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="font-size: 28px; margin-bottom: 20px; color: #dc3545;">
+            ⚠️ 記事を削除
+        </h2>
+        
+        <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 20px; border-radius: 4px; margin-bottom: 30px;">
+            <p style="color: #856404; font-weight: bold; margin-bottom: 10px;">
+                この操作は取り消せません！
+            </p>
+            <p style="color: #856404;">
+                以下の記事を本当に削除してもよろしいですか？
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 4px; margin-bottom: 30px;">
+            <h3 style="font-size: 20px; margin-bottom: 10px; color: #333;">
+                {{ post.title }}
+            </h3>
+            <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                👤 {{ post.author.username }} | 📅 {{ post.created_at|date:"Y年m月d日" }}
+            </p>
+            <p style="color: #333; line-height: 1.6;">
+                {{ post.content|truncatewords:30 }}
+            </p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-start;">
+                <button type="submit" class="btn btn-danger">
+                    削除する
+                </button>
+                <a href="{% url 'blog:post_detail' post.slug %}" class="btn btn-secondary">
+                    キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
