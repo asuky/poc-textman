@@ -72,32 +72,40 @@ urlpatterns = [
     ),
     
     # ============================================================
-    # API エンドポイント（JSON）
+    # API エンドポイント（Django REST Framework）
     # ============================================================
-    # API も固定パス（api/posts/create/）を可変パス（api/posts/<slug>/）より先に
+    # DRFのクラスベースビューは .as_view() を使ってURL登録します。
+    # 固定パス（api/posts/create/）を可変パス（api/posts/<slug>/）より先に配置
     # ============================================================
     
-    # 記事一覧API: /blog/api/posts/
+    # 記事一覧API: GET /blog/api/posts/
     path(
         'api/posts/',
-        views.post_list_api,
+        views.PostListAPIView.as_view(),
         name='post_list_api'
     ),
     
-    # 記事作成API（トランザクション使用）: /blog/api/posts/create/
+    # 記事作成API: POST /blog/api/posts/create/
     # ⚠️ api/posts/<slug>/ より先に配置すること！
     path(
         'api/posts/create/',
-        views.create_post_with_tags_api,
-        name='create_post_api'
+        views.PostCreateAPIView.as_view(),
+        name='post_create_api'
     ),
     
-    # 記事詳細API: /blog/api/posts/<slug>/
+    # 記事詳細API: GET /blog/api/posts/<slug>/
     # ⚠️ 可変パスなので固定パスより後に配置
     path(
         'api/posts/<slug:slug>/',
-        views.post_detail_api,
+        views.PostDetailAPIView.as_view(),
         name='post_detail_api'
+    ),
+    
+    # カテゴリ一覧API: GET /blog/api/categories/
+    path(
+        'api/categories/',
+        views.category_list_api,
+        name='category_list_api'
     ),
     
     # ============================================================

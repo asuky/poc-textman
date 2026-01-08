@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',  # Django REST Framework
     'blog',
 ]
 
@@ -163,3 +164,39 @@ STATICFILES_DIRS = [
 # テンプレート設定（既存の設定を確認）
 # ============================================================
 # TEMPLATES の DIRS に、カスタムテンプレートディレクトリを追加します
+
+# ============================================================
+# Django REST Framework 設定
+# ============================================================
+REST_FRAMEWORK = {
+    # デフォルトの認証クラス
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',  # セッション認証
+        'rest_framework.authentication.BasicAuthentication',    # Basic認証
+    ],
+    
+    # デフォルトの権限クラス
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # 読み取りは誰でも、書き込みは認証必須
+    ],
+    
+    # ページネーション設定
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,  # 1ページあたり20件
+    
+    # レンダラー（出力フォーマット）
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',           # JSON形式
+        'rest_framework.renderers.BrowsableAPIRenderer',   # ブラウザ可能なAPI（開発時便利）
+    ],
+    
+    # パーサー（入力フォーマット）
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ],
+    
+    # 日時のフォーマット
+    'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
+}

@@ -80,7 +80,8 @@ $ docker login
 # Django メモ
 ある程度のステップで copilot に下記依頼すること。
 ```
-ここまででまだまとめられてない会話の内容を prompts/YYYYMMDD.md にまとめてください
+ここまででまだまとめられてない会話の内容を prompts/YYYYMMDD-枝番.md にまとめてください。
+フォーマットは問いませんが、こちらの発言内容自体は identical に記載してください。
 ```
 ## Django 開始手順
 app ディレクトリ内前提

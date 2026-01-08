@@ -8,7 +8,19 @@ from django.http import JsonResponse
 from django.db import transaction
 import json
 
+# Django REST Framework のインポート
+from rest_framework import generics, status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+
 from .models import Post, Category, Comment, Tag
+from .serializers import (
+    PostListSerializer, 
+    PostDetailSerializer, 
+    PostCreateSerializer,
+    CategorySerializer
+)
 
 # ============================================================
 # ブログビュー（N+1問題対策済み）
@@ -305,97 +317,186 @@ class CategoryListView(ListView):
 
 
 # ============================================================
-# API ビュー（JSON レスポンス）
+# API ビュー（Django REST Framework）
+# ============================================================
+"""
+Django REST Framework (DRF) について
+============================================================
+
+DRFは、DjangoでRESTful APIを構築するための強力なツールキットです。
+
+主な機能：
+1. シリアライゼーション: モデル ⇔ JSON の変換
+2. バリデーション: 自動的な入力検証
+3. 認証・権限: 多様な認証方式をサポート
+4. ブラウザ可能なAPI: Web UIで簡単にAPIをテスト可能
+5. ドキュメント自動生成: Swagger/OpenAPI対応
+
+Generic Views の種類:
+- ListAPIView: 一覧取得（GET）
+- RetrieveAPIView: 詳細取得（GET）
+- CreateAPIView: 作成（POST）
+- UpdateAPIView: 更新（PUT/PATCH）
+- DestroyAPIView: 削除（DELETE）
+- ListCreateAPIView: 一覧取得 + 作成
+- RetrieveUpdateDestroyAPIView: 詳細取得 + 更新 + 削除
+
+公式ドキュメント:
+https://www.django-rest-framework.org/
+https://www.django-rest-framework.org/api-guide/generic-views/
+============================================================
+"""
+
+
+class PostListAPIView(generics.ListAPIView):
+    """
+    記事一覧API（GET）
+    
+    ============================================================
+    DRF Generic Views の使い方
+    ============================================================
+    
+    ListAPIView を継承すると、自動的に以下の機能が提供されます：
+    - GET リクエストで一覧を返す
+    - シリアライゼーション（モデル → JSON変換）
+    - ページネーション（設定による）
+    - フィルタリング（設定による）
+    
+    最小限必要な設定：
+    - queryset または get_queryset()
+    - serializer_class
+    
+    オプション設定：
+    - permission_classes: 権限管理
+    - filter_backends: フィルタリング
+    - pagination_class: ページネーション
+    - ordering_fields: ソート可能なフィールド
+    ============================================================
+    """
+    serializer_class = PostListSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]  # 読み取りは誰でも、書き込みは認証必須
+    
+    def get_queryset(self):
+        """
+        N+1問題を避けるために最適化したクエリセット
+        
+        HTML版のPostListViewと同じ最適化を行っています。
+        """
+        return Post.objects.filter(
+            status='published'
+        ).select_related(
+            'author', 'category'
+        ).prefetch_related(
+            'tags'
+        ).annotate(
+            comment_count=Count('comments')
+        ).order_by('-published_at')
+
+
+class PostDetailAPIView(generics.RetrieveAPIView):
+    """
+    記事詳細API（GET）
+    
+    RetrieveAPIView を継承すると、自動的に以下の機能が提供されます：
+    - GET リクエストで特定のオブジェクトを返す
+    - URL パラメータ（pk または slug）からオブジェクトを取得
+    - 404エラーハンドリング
+    
+    lookup_field で検索に使うフィールドを指定できます。
+    デフォルトは 'pk' ですが、'slug' に変更可能です。
+    """
+    serializer_class = PostDetailSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    lookup_field = 'slug'  # URL から slug でオブジェクトを検索
+    
+    def get_queryset(self):
+        """N+1問題を避けるために最適化"""
+        return Post.objects.filter(
+            status='published'
+        ).select_related(
+            'author', 'category'
+        ).prefetch_related(
+            'tags',
+            Prefetch(
+                'comments',
+                queryset=Comment.objects.select_related('author')
+            )
+        )
+
+
+class PostCreateAPIView(generics.CreateAPIView):
+    """
+    記事作成API（POST）
+    
+    ============================================================
+    CreateAPIView の動作フロー
+    ============================================================
+    
+    1. リクエスト受信
+    2. Serializer でバリデーション（自動）
+       - フィールドの型チェック
+       - 必須フィールドチェック
+       - カスタムバリデーション（validate_xxx メソッド）
+    3. バリデーション成功 → perform_create() 呼び出し
+    4. Serializer の create() メソッドでDB保存
+    5. 201 Created レスポンス返却
+    
+    バリデーション失敗時:
+    - 自動的に 400 Bad Request を返す
+    - エラーメッセージも自動生成
+    
+    【トランザクション】
+    DRFのGeneric Viewsは、デフォルトで @transaction.atomic が
+    適用されているため、明示的に指定する必要はありません。
+    ============================================================
+    """
+    serializer_class = PostCreateSerializer
+    permission_classes = [IsAuthenticated]  # 認証必須
+    
+    def perform_create(self, serializer):
+        """
+        保存時に著者を自動設定
+        
+        このメソッドは、バリデーション成功後、保存前に呼ばれます。
+        ここで追加のロジック（著者の設定など）を実行できます。
+        """
+        serializer.save(author=self.request.user)
+
+
+# ============================================================
+# 関数ベースAPIビュー（参考用）
+# ============================================================
+# クラスベースビューの方が推奨されますが、
+# シンプルなAPIには @api_view デコレータも使えます。
 # ============================================================
 
-def post_list_api(request):
+@api_view(['GET'])
+def category_list_api(request):
     """
-    記事一覧API（JSON）
+    カテゴリ一覧API（関数ベース）
     
-    N+1対策を行った上で、JSON形式で記事一覧を返します。
+    @api_view デコレータを使うと：
+    - 指定したHTTPメソッドのみ受け付ける
+    - DRFのResponse オブジェクトを使える
+    - 自動的にブラウザ可能なAPIが生成される
+    
+    シンプルなAPIには便利ですが、複雑な処理には
+    クラスベースビューの方が適しています。
     """
-    posts = Post.objects.filter(
-        status='published'
-    ).select_related(
-        'author', 'category'
-    ).prefetch_related(
-        'tags'
-    ).values(
-        'id', 'title', 'slug', 'author__username',
-        'category__name', 'created_at'
-    )
+    categories = Category.objects.annotate(
+        post_count=Count('posts', filter=Q(posts__status='published'))
+    ).order_by('name')
     
-    return JsonResponse(list(posts), safe=False)
+    serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)
 
 
-def post_detail_api(request, slug):
-    """
-    記事詳細API（JSON）
-    
-    特定の記事をJSON形式で返します。
-    """
-    post = get_object_or_404(
-        Post.objects.select_related('author', 'category').prefetch_related('tags'),
-        slug=slug,
-        status='published'
-    )
-    
-    data = {
-        'id': post.id,
-        'title': post.title,
-        'slug': post.slug,
-        'content': post.content,
-        'author': post.author.username,
-        'category': post.category.name if post.category else None,
-        'tags': [tag.name for tag in post.tags.all()],
-        'created_at': post.created_at,
-        'published_at': post.published_at,
-    }
-    
-    return JsonResponse(data)
-
-
-@transaction.atomic
-def create_post_with_tags_api(request):
-    """
-    記事作成API（トランザクション使用）
-    
-    記事とタグを同時に作成します。
-    トランザクションにより、すべて成功するか、すべて失敗するかのどちらかになります。
-    """
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            
-            # トランザクション内で複数のDB操作を実行
-            post = Post.objects.create(
-                title=data['title'],
-                slug=data['slug'],
-                author=request.user,
-                content=data['content'],
-                status=data.get('status', 'draft')
-            )
-            
-            # タグの追加
-            tag_names = data.get('tags', [])
-            for tag_name in tag_names:
-                tag, _ = Tag.objects.get_or_create(name=tag_name)
-                post.tags.add(tag)
-            
-            return JsonResponse({
-                'status': 'success',
-                'id': post.id,
-                'slug': post.slug
-            }, status=201)
-            
-        except Exception as e:
-            # エラーが発生した場合、トランザクションは自動的にロールバックされる
-            return JsonResponse({
-                'status': 'error',
-                'message': str(e)
-            }, status=400)
-    
-    return JsonResponse({'status': 'error', 'message': 'POST method required'}, status=405)
+# ============================================================
+# 従来のJSON APIビュー（参考用・非推奨）
+# ============================================================
+# 以下は、DRFを使わない従来の実装方法です。
+# 学習のため残していますが、新規開発では上記のDRF版を使用してください。
+# ============================================================
 
 
 # ============================================================
